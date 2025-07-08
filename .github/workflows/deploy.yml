@@ -34,4 +34,7 @@ jobs:
           local-dir: ./ # Le dossier local à envoyer (tout le projet)
           server-dir: ~/ # Le dossier de destination sur le serveur
           # On exclut les fichiers inutiles pour un envoi plus rapide
-          exclude: .git*/**, .github*/**, node_modules/** ```
+          exclude:
+            /.git*/**,
+            /.github*/**,
+            /node_modules/** ```
