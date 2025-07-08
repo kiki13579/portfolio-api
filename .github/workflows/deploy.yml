@@ -31,8 +31,6 @@ jobs:
           server: ${{ secrets.FTP_SERVER }}
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
-          protocol: ftps # Important: on utilise sftp, pas ftp
-          port: 5022 # Le port SFTP, généralement 5022
           local-dir: ./ # Le dossier local à envoyer (tout le projet)
           server-dir: ~/ # Le dossier de destination sur le serveur
           # On exclut les fichiers inutiles pour un envoi plus rapide
