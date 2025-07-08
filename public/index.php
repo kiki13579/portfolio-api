@@ -1,83 +1,60 @@
 <?php
+// public/index.php -- FICHIER DE DIAGNOSTIC TEMPORAIRE
 
-declare(strict_types=1);
-
+// Force l'affichage de TOUTES les erreurs possibles
 ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
-require __DIR__ . '/../vendor/autoload.php';
+echo "<h1>Diagnostic du Serveur</h1>";
 
-use App\Controllers\ProjectController;
-use App\Views\JsonView;
-use Monolog\Logger;
-use Monolog\Handler\StreamHandler;
+// --- Test 1: Version de PHP ---
+echo "<h2>1. Version de PHP</h2>";
+echo "<p>Version utilisée : " . phpversion() . "</p>";
 
+// --- Test 2: Connexion à la base de données ---
+echo "<h2>2. Connexion Base de Données</h2>";
+try {
+    // On charge les variables d'environnement manuellement pour ce test
+    $dotenv_path = __DIR__ . '/../.env';
+    if (!file_exists($dotenv_path)) {
+        throw new Exception("Le fichier .env est introuvable.");
+    }
 
-$dotenv = Dotenv\Dotenv::createImmutable(__DIR__ . '/../');
-$container = require __DIR__ . '/../config/container.php';
+    $lines = file($dotenv_path, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+    foreach ($lines as $line) {
+        if (strpos(trim($line), '#') === 0) continue;
+        list($name, $value) = explode('=', $line, 2);
+        $_ENV[trim($name)] = trim($value);
+    }
 
-$dotenv->load();
+    $host = $_ENV['DB_HOST'] ?? null;
+    $dbName = $_ENV['DB_NAME'] ?? null;
+    $user = $_ENV['DB_USER'] ?? null;
+    $pass = $_ENV['DB_PASS'] ?? null;
 
-set_exception_handler(function ($e) {
-    // Crée un nouveau logger qui écrit dans le fichier logs/app.log
-    $log = new Logger('API');
-    $log->pushHandler(new StreamHandler(__DIR__ . '/../logs/app.log', Logger::ERROR));
+    if (!$host || !$dbName || !$user) {
+        throw new Exception("Une ou plusieurs variables de base de données (DB_HOST, DB_NAME, DB_USER) sont manquantes dans le fichier .env.");
+    }
 
-    // Enregistre l'erreur détaillée dans le fichier de log
-    $log->error($e->getMessage(), [
-        'file' => $e->getFile(),
-        'line' => $e->getLine(),
-        'trace' => $e->getTraceAsString()
-    ]);
-    
-    // Affiche un message générique à l'utilisateur
-    App\Views\JsonView::render(['error' => 'An internal server error occurred'], 500);
-});
+    $pdo = new PDO("mysql:host=$host;dbname=$dbName;charset=utf8mb4", $user, $pass);
+    echo "<p style='color:green; font-weight:bold;'>Connexion à la base de données '{$dbName}' : RÉUSSIE !</p>";
 
-
-$pdo = require __DIR__ . '/../config/database.php';
-
-
-App\Middleware\ApiKeyMiddleware::handle($pdo);
-
-
-$dispatcher = FastRoute\simpleDispatcher(function(FastRoute\RouteCollector $r) {
-    // Route pour lister tous les projets
-    $r->addRoute('GET', '/api/projects', [ProjectController::class, 'list']);
-
-    // Route pour créer un nouveau projet
-    $r->addRoute('POST', '/api/projects', [ProjectController::class, 'create']);
-
-    // Route pour récupérer un seul projet par son ID
-    // {id:\d+} signifie que l'id doit être un nombre entier
-    $r->addRoute('GET', '/api/projects/{id:\d+}', [ProjectController::class, 'show']);
-
-    // Route pour mettre à jour un projet par son ID
-    $r->addRoute('PUT', '/api/projects/{id:\d+}', [ProjectController::class, 'update']);
-
-    // Route pour supprimer un projet par son ID
-    $r->addRoute('DELETE', '/api/projects/{id:\d+}', [ProjectController::class, 'delete']);
-});
-
-// --- Lancement du routeur ---
-$httpMethod = $_SERVER['REQUEST_METHOD'];
-$uri = strtok($_SERVER['REQUEST_URI'], '?');
-
-$routeInfo = $dispatcher->dispatch($_SERVER['REQUEST_METHOD'], strtok($_SERVER['REQUEST_URI'], '?'));
-
-switch ($routeInfo[0]) {
-    case FastRoute\Dispatcher::NOT_FOUND:
-        JsonView::render(['error' => 'Not Found'], 404);
-        break;
-    case FastRoute\Dispatcher::METHOD_NOT_ALLOWED:
-        JsonView::render(['error' => 'Method Not Allowed'], 405);
-        break;
-    case FastRoute\Dispatcher::FOUND:
-        $handler = $routeInfo[1];
-        $vars = $routeInfo[2];
-
-        $controller = $container->get($handler[0]);
-
-        $controller->{$handler[1]}($vars);
-        break;
+} catch (Throwable $e) {
+    echo "<p style='color:red; font-weight:bold;'>Connexion à la base de données : ÉCHEC.</p>";
+    echo "<p><strong>Message d'erreur :</strong> " . $e->getMessage() . "</p>";
 }
+
+// --- Test 3: Extensions PHP requises ---
+echo "<h2>3. Extensions PHP</h2>";
+$required_extensions = ['pdo_mysql', 'json', 'ctype'];
+foreach ($required_extensions as $ext) {
+    if (extension_loaded($ext)) {
+        echo "<p style='color:green;'>Extension '{$ext}' : OK</p>";
+    } else {
+        echo "<p style='color:red; font-weight:bold;'>Extension '{$ext}' : MANQUANTE !</p>";
+    }
+}
+
+// Fin du script de diagnostic
+exit();
