@@ -14,6 +14,8 @@ use Monolog\Handler\StreamHandler;
 
 
 $dotenv = Dotenv\Dotenv::createImmutable(__DIR__ . '/../');
+$container = require __DIR__ . '/../config/container.php';
+
 $dotenv->load();
 
 set_exception_handler(function ($e) {
@@ -61,7 +63,7 @@ $dispatcher = FastRoute\simpleDispatcher(function(FastRoute\RouteCollector $r) {
 $httpMethod = $_SERVER['REQUEST_METHOD'];
 $uri = strtok($_SERVER['REQUEST_URI'], '?');
 
-$routeInfo = $dispatcher->dispatch($httpMethod, $uri);
+$routeInfo = $dispatcher->dispatch($_SERVER['REQUEST_METHOD'], strtok($_SERVER['REQUEST_URI'], '?'));
 
 switch ($routeInfo[0]) {
     case FastRoute\Dispatcher::NOT_FOUND:
@@ -72,10 +74,10 @@ switch ($routeInfo[0]) {
         break;
     case FastRoute\Dispatcher::FOUND:
         $handler = $routeInfo[1];
-        $vars = $routeInfo[2]; // Contient les paramètres de l'URL, comme l'ID
+        $vars = $routeInfo[2];
 
-        // On crée une instance du contrôleur et on appelle la méthode
-        // en passant les paramètres de l'URL
-        (new $handler[0]($pdo))->{$handler[1]}($vars);
+        $controller = $container->get($handler[0]);
+
+        $controller->{$handler[1]}($vars);
         break;
 }
