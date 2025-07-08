@@ -1,0 +1,39 @@
+# Nom du workflow qui apparaîtra dans l'onglet "Actions" de GitHub
+name: Deploy Portfolio API to PlanetHoster
+
+# Déclencheur : ce workflow s'exécute à chaque "push" sur la branche "main"
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  # Nom du "job" (tâche)
+  ftp-deploy:
+    # Le type de machine sur lequel le job va s'exécuter
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 1. Récupération du code
+        uses: actions/checkout@v4
+
+      - name: 2. Configuration de PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4' # Assurez-vous que c'est votre version de PHP
+
+      - name: 3. Installation des dépendances (localement sur le robot)
+        run: composer install --no-dev --optimize-autoloader
+
+      - name: 4. Déploiement des fichiers via SFTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          protocol: sftp # Important: on utilise sftp, pas ftp
+          port: 5022 # Le port SFTP, généralement 5022
+          local-dir: ./ # Le dossier local à envoyer (tout le projet)
+          server-dir: ~/api-mvc/ # Le dossier de destination sur le serveur
+          # On exclut les fichiers inutiles pour un envoi plus rapide
+          exclude: .git*/**, .github*/**, node_modules/** ```
