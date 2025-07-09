@@ -1,83 +1,74 @@
 <?php
-
+// public/index.php
 declare(strict_types=1);
 
-ini_set('display_errors', 1);
-error_reporting(E_ALL);
+// Démarre la session pour les messages flash et l'authentification admin
+session_start(); 
 
 require __DIR__ . '/../vendor/autoload.php';
 
+use App\Controllers\AdminController;
 use App\Controllers\ProjectController;
 use App\Views\JsonView;
+use Doctrine\DBAL\Connection;
 use Monolog\Logger;
-use Monolog\Handler\StreamHandler;
+use Twig\Environment;
 
-
-$dotenv = Dotenv\Dotenv::createImmutable(__DIR__ . '/../');
+// --- Conteneur et Gestion des Erreurs ---
 $container = require __DIR__ . '/../config/container.php';
 
-$dotenv->load();
-
-set_exception_handler(function ($e) {
-    // Crée un nouveau logger qui écrit dans le fichier logs/app.log
-    $log = new Logger('API');
-    $log->pushHandler(new StreamHandler(__DIR__ . '/../logs/app.log', Logger::ERROR));
-
-    // Enregistre l'erreur détaillée dans le fichier de log
-    $log->error($e->getMessage(), [
-        'file' => $e->getFile(),
-        'line' => $e->getLine(),
-        'trace' => $e->getTraceAsString()
-    ]);
-    
-    // Affiche un message générique à l'utilisateur
-    JsonView::render(['error' => 'An internal server error occurred'], 500);
+set_exception_handler(function (Throwable $e) use ($container) {
+    $container->get(Logger::class)->error($e->getMessage(), ['exception' => $e]);
+    JsonView::render(['error' => 'Internal Server Error', 'message' => $e->getMessage()], 500);
 });
 
+// --- Middleware de Sécurité pour l'API ---
+// On vérifie si la route commence par /api/ pour n'appliquer la sécurité que sur l'API
+if (str_starts_with($_SERVER['REQUEST_URI'], '/api/')) {
+    App\Middleware\ApiKeyMiddleware::handle($container->get(Connection::class));
+}
 
-$pdo = require __DIR__ . '/../config/database.php';
+// --- Configuration de Twig ---
+/** @var Environment $twig */
+$twig = $container->get(Environment::class);
+// On donne accès à la session à Twig pour les messages flash
+$twig->addGlobal('app', ['session' => $_SESSION]);
 
-
-App\Middleware\ApiKeyMiddleware::handle($pdo);
-
-
+// --- Routage ---
 $dispatcher = FastRoute\simpleDispatcher(function(FastRoute\RouteCollector $r) {
-    // Route pour lister tous les projets
+    // API Routes
     $r->addRoute('GET', '/api/projects', [ProjectController::class, 'list']);
-
-    // Route pour créer un nouveau projet
     $r->addRoute('POST', '/api/projects', [ProjectController::class, 'create']);
-
-    // Route pour récupérer un seul projet par son ID
-    // {id:\d+} signifie que l'id doit être un nombre entier
     $r->addRoute('GET', '/api/projects/{id:\d+}', [ProjectController::class, 'show']);
-
-    // Route pour mettre à jour un projet par son ID
-    $r->addRoute('PUT', '/api/projects/{id:\d+}', [ProjectController::class, 'update']);
-
-    // Route pour supprimer un projet par son ID
-    $r->addRoute('DELETE', '/api/projects/{id:\d+}', [ProjectController::class, 'delete']);
+    
+    // Admin Routes
+    $r->addRoute('GET', '/admin', [AdminController::class, 'dashboard']);
+    $r->addRoute('GET', '/admin/login', [AdminController::class, 'showLogin']);
+    $r->addRoute('POST', '/admin/login', [AdminController::class, 'handleLogin']);
+    $r->addRoute('GET', '/admin/logout', [AdminController::class, 'logout']);
+    $r->addRoute('GET', '/admin/projects/new', [AdminController::class, 'showCreateForm']);
+    $r->addRoute('POST', '/admin/projects/new', [AdminController::class, 'handleCreateForm']);
+    $r->addRoute('GET', '/admin/projects/edit/{id:\d+}', [AdminController::class, 'showEditForm']);
+    $r->addRoute('POST', '/admin/projects/edit/{id:\d+}', [AdminController::class, 'handleEditForm']);
+    $r->addRoute('POST', '/admin/projects/delete/{id:\d+}', [AdminController::class, 'handleDelete']);
 });
-
-// --- Lancement du routeur ---
-$httpMethod = $_SERVER['REQUEST_METHOD'];
-$uri = strtok($_SERVER['REQUEST_URI'], '?');
-
+    
 $routeInfo = $dispatcher->dispatch($_SERVER['REQUEST_METHOD'], strtok($_SERVER['REQUEST_URI'], '?'));
-
+    
 switch ($routeInfo[0]) {
-    case FastRoute\Dispatcher::NOT_FOUND:
-        JsonView::render(['error' => 'Not Found'], 404);
-        break;
-    case FastRoute\Dispatcher::METHOD_NOT_ALLOWED:
-        JsonView::render(['error' => 'Method Not Allowed'], 405);
-        break;
     case FastRoute\Dispatcher::FOUND:
         $handler = $routeInfo[1];
         $vars = $routeInfo[2];
 
         $controller = $container->get($handler[0]);
-
         $controller->{$handler[1]}($vars);
+        break;
+    
+    case FastRoute\Dispatcher::NOT_FOUND:
+        JsonView::render(['error' => 'Not Found'], 404);
+        break;
+
+    case FastRoute\Dispatcher::METHOD_NOT_ALLOWED:
+        JsonView::render(['error' => 'Method Not Allowed'], 405);
         break;
 }

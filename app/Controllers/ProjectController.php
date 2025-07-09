@@ -1,37 +1,42 @@
 <?php
-// app/Controllers/ProjectController.php
 namespace App\Controllers;
 
 use App\Models\Project;
 use App\Views\JsonView;
 use Doctrine\DBAL\Connection;
+use Psr\Cache\CacheItemPoolInterface;
 use Rakit\Validation\Validator;
 
 class ProjectController
 {
-    private Connection $db;
-
-    public function __construct(Connection $db)
-    {
-        $this->db = $db;
-    }
+    public function __construct(
+        private Connection $db,
+        private CacheItemPoolInterface $cache
+    ) {}
 
     public function list(): void
     {
+        $cacheItem = $this->cache->getItem('projects_list');
+        if ($cacheItem->isHit()) {
+            JsonView::render($cacheItem->get());
+            return;
+        }
+
         $projects = Project::fetchAll($this->db);
+
+        $cacheItem->set($projects);
+        $this->cache->save($cacheItem);
+        
         JsonView::render($projects);
     }
 
     public function show(array $vars): void
     {
-        $id = (int)$vars['id'];
-        $project = Project::fetchOne($this->db, $id);
-
+        $project = Project::fetchOne($this->db, (int)$vars['id']);
         if (!$project) {
             JsonView::render(['error' => 'Project not found'], 404);
-        } else {
-            JsonView::render($project);
         }
+        JsonView::render($project);
     }
 
     public function create(): void
@@ -40,36 +45,8 @@ class ProjectController
 
         $validator = new Validator;
         $validation = $validator->validate($input, [
-            'title'       => 'required|min:5',
-            'description' => 'required|min:10',
-            'projectUrl'  => 'url'
-        ]);
-
-        if ($validation->fails()) {
-            $errors = $validation->errors();
-            JsonView::render(['errors' => $errors->firstOfAll()], 400);
-            return;
-        }
-
-        $newProjectId = Project::create($this->db, $input);
-
-        if ($newProjectId) {
-            JsonView::render(['message' => 'Project created successfully', 'id' => $newProjectId], 201);
-        } else {
-            JsonView::render(['error' => 'Failed to create project'], 500);
-        }
-    }
-
-    public function update(array $vars): void
-    {
-        $id = (int)$vars['id'];
-        $input = (array) json_decode(file_get_contents('php://input'), true);
-
-        $validator = new Validator;
-        $validation = $validator->validate($input, [
-            'title'       => 'required|min:5',
-            'description' => 'required|min:10',
-            'projectUrl'  => 'url'
+            'title' => 'required|min:5',
+            'description' => 'required'
         ]);
 
         if ($validation->fails()) {
@@ -77,25 +54,14 @@ class ProjectController
             return;
         }
 
-        if (!Project::fetchOne($this->db, $id)) {
-            JsonView::render(['error' => 'Project not found'], 404);
-            return;
+        $newProjectId = Project::create($this->db, $validation->getValidatedData());
+
+        if ($newProjectId) {
+            $this->cache->deleteItem('projects_list');
+            JsonView::render(['message' => 'Project created', 'id' => $newProjectId], 201);
+        } else {
+            JsonView::render(['error' => 'Failed to create project'], 500);
         }
-
-        Project::update($this->db, $id, $input);
-        JsonView::render(['message' => 'Project updated successfully']);
-    }
-
-    public function delete(array $vars): void
-    {
-        $id = (int)$vars['id'];
-
-        if (!Project::fetchOne($this->db, $id)) {
-            JsonView::render(['error' => 'Project not found'], 404);
-            return;
-        }
-        
-        Project::delete($this->db, $id);
-        JsonView::render(null, 204);
     }
 }
+// Explication : Le contrôleur reçoit la requête, demande au cache ou au modèle les données, et passe le résultat à la vue. Il ne fait rien d'autre.

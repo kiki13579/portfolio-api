@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Middleware;
 
 use App\Models\ApiKey;
@@ -14,7 +13,7 @@ class ApiKeyMiddleware
 
         if ($providedKey === null || !ApiKey::isValid($providedKey, $pdo)) {
             JsonView::render(['error' => 'Unauthorized'], 401);
-            exit();
+            exit(); 
         }
     }
 }

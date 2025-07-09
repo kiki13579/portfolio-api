@@ -1,5 +1,5 @@
 <?php
-// app/Models/Project.php
+
 namespace App\Models;
 
 use DateTime;
@@ -29,38 +29,30 @@ class Project
     public static function create(Connection $db, array $data): string|false
     {
         $data['createdAt'] = (new DateTime())->format('Y-m-d H:i:s');
-
-        $result = $db->insert(
-            'project', [
-                'title' => $data['title'],
-                'description' => $data['description'],
-                'projectUrl' => $data['projectUrl'] ?? null,
-                'createdAt' => $data['createdAt']
+        $result = $db->insert('project', [
+            'title' => $data['title'],
+            'description' => $data['description'],
+            'projectUrl' => $data['projectUrl'] ?? null,
+            'createdAt' => $data['createdAt']
         ]);
-
         return $result ? $db->lastInsertId() : false;
     }
-
     public static function update(Connection $db, int $id, array $data): bool
     {
-        $result = $db->update(
-            'project', [
-                'title' => $data['title'],
-                'description' => $data['description'],
-                'projectUrl' => $data['projectUrl'] ?? null
-            ], [
-                'id' => $id
-            ]);
+        $result = $db->update('project', [
+            'title' => $data['title'],
+            'description' => $data['description'],
+            'projectUrl' => $data['projectUrl'] ?? null
+        ], ['id' => $id]);
 
         return $result > 0;
     }
 
     public static function delete(Connection $db, int $id): bool
     {
-        $result = $db->delete(
-            'project', [
-                'id' => $id
-            ]);
+        $result = $db->delete('project', ['id' => $id]);
+
         return $result > 0;
     }
 }
+// Explication : Chaque méthode (fetchAll, fetchOne, create) est une action spécifique sur la base de données. Elle utilise le Query Builder de Doctrine DBAL pour construire des requêtes SQL de manière propre et sécurisée.
