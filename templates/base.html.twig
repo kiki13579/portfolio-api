@@ -12,11 +12,8 @@
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
         <div class="container">
             <a class="navbar-brand" href="/admin">Portfolio Admin</a>
-            <ul class="navbar-nav ms-auto">
-                <li class="nav-item">
-                    <a class="nav-link" href="/admin/logout">Se déconnecter</a>
-                </li>
-            </ul>
+            {% block ul %}{% endblock %}
+            
         </div>
     </nav>
 
@@ -26,7 +23,7 @@
                 {{ app.session.flash('flash_message')[0] }}
             </div>
         {% endif %}
-        
+
         {% block body %}{% endblock %}
     </main>
 

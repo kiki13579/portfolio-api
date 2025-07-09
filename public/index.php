@@ -8,6 +8,7 @@ session_start();
 require __DIR__ . '/../vendor/autoload.php';
 
 use App\Controllers\AdminController;
+use App\Controllers\HomeController;
 use App\Controllers\ProjectController;
 use App\Views\JsonView;
 use Doctrine\DBAL\Connection;
@@ -36,6 +37,9 @@ $twig->addGlobal('app', ['session' => $_SESSION]);
 
 // --- Routage ---
 $dispatcher = FastRoute\simpleDispatcher(function(FastRoute\RouteCollector $r) {
+    // Home Routes
+    $r->addRoute('GET', '/', [HomeController::class, 'index']);
+
     // API Routes
     $r->addRoute('GET', '/api/projects', [ProjectController::class, 'list']);
     $r->addRoute('POST', '/api/projects', [ProjectController::class, 'create']);
