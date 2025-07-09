@@ -31,7 +31,7 @@ set_exception_handler(function ($e) {
     ]);
     
     // Affiche un message générique à l'utilisateur
-    App\Views\JsonView::render(['error' => 'An internal server error occurred'], 500);
+    JsonView::render(['error' => 'An internal server error occurred'], 500);
 });
 
 
