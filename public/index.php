@@ -9,7 +9,6 @@ require __DIR__ . '/../vendor/autoload.php';
 
 // On importe toutes les classes de contrôleurs que l'on va utiliser
 use App\Controllers\AdminController;
-use App\Controllers\ApiKeyAdminController;
 use App\Controllers\HomeController;
 use App\Controllers\ProjectAdminController;
 use App\Controllers\ProjectController;
@@ -69,11 +68,6 @@ $dispatcher = FastRoute\simpleDispatcher(function(FastRoute\RouteCollector $r) {
     $r->addRoute('GET', '/admin/skills/new', [SkillAdminController::class, 'showCreateForm']);
     $r->addRoute('POST', '/admin/skills/new', [SkillAdminController::class, 'handleCreateForm']);
     $r->addRoute('GET', '/admin/skills/edit/{id:\d+}', [SkillAdminController::class, 'showForm']);
-
-    // Routes du Back-Office (API Keys)
-    $r->addRoute('GET', '/admin/api-keys', [ApiKeyAdminController::class, 'list']);
-    $r->addRoute('GET', '/admin/api-keys/new', [ApiKeyAdminController::class, 'showCreateForm']);
-    $r->addRoute('POST', '/admin/api-keys/new', [ApiKeyAdminController::class, 'handleCreateForm']);
 });
     
 // --- Lancement du Routeur ---

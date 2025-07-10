@@ -1,4 +1,46 @@
+# ##############################################################################
+# SECTION 1 : SÉCURITÉ
+# ##############################################################################
+
+# Empêche le listage des dossiers
+Options -Indexes
+
+# Bloque l'accès aux fichiers sensibles qui pourraient être dans le dossier public
+<FilesMatch "(\.env|composer\.json|composer\.lock)">
+    Order Allow,Deny
+    Deny from all
+</FilesMatch>
+
+# ##############################################################################
+# SECTION 2 : REDIRECTION HTTPS
+# ##############################################################################
+
+# Force toutes les requêtes à utiliser HTTPS
 RewriteEngine On
+RewriteCond %{HTTPS} !=on
+RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+# ##############################################################################
+# SECTION 3 : ROUTAGE VERS LE CONTRÔLEUR FRONTAL (VOTRE CODE)
+# ##############################################################################
+
+# Redirige toutes les requêtes qui ne sont pas des fichiers ou des dossiers existants vers index.php
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule . index.php [L]
+
+# ##############################################################################
+# SECTION 4 : PERFORMANCE (CACHE NAVIGATEUR)
+# ##############################################################################
+
+<IfModule mod_expires.c>
+  ExpiresActive On
+  ExpiresDefault                          "access plus 1 month"
+  ExpiresByType text/css                  "access plus 1 year"
+  ExpiresByType application/javascript    "access plus 1 year"
+  ExpiresByType image/gif                 "access plus 1 year"
+  ExpiresByType image/jpeg                "access plus 1 year"
+  ExpiresByType image/png                 "access plus 1 year"
+  ExpiresByType image/svg+xml             "access plus 1 year"
+  ExpiresByType image/webp                "access plus 1 year"
+</IfModule>
