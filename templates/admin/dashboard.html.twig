@@ -3,6 +3,17 @@
 
 {% block title %}Tableau de Bord{% endblock %}
 
+{% block ul %}
+<ul class="navbar-nav me-auto">
+    <li class="nav-item"><a class="nav-link" href="/admin/projects">Projets</a></li>
+    <li class="nav-item"><a class="nav-link" href="/admin/skills">Compétences</a></li>
+    <li class="nav-item"><a class="nav-link" href="/admin/api-keys">Clés d'API</a></li>
+</ul>
+<ul class="navbar-nav ms-auto">
+    <li class="nav-item"><a class="nav-link" href="/admin/logout">Se déconnecter</a></li>
+</ul>
+{% endblock %}
+
 {% block body %}
     <h1>Bienvenue sur votre tableau de bord</h1>
     <p>Utilisez le menu ci-dessus pour naviguer entre les différentes sections de l'administration.</p>

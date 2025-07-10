@@ -1,11 +1,14 @@
 {% extends "base.html.twig" %}
 {% block title %}Gestion des Compétences{% endblock %}
 {% block ul %}
-    <ul class="navbar-nav ms-auto">
-        <li class="nav-item"><a class="nav-link" href="/admin">Projets</a></li>
-        <li class="nav-item"><a class="nav-link" href="/admin/skills">Compétences</a></li>
-        <li class="nav-item"><a class="nav-link" href="/admin/logout">Se déconnecter</a></li>
-    </ul>
+<ul class="navbar-nav me-auto">
+    <li class="nav-item"><a class="nav-link" href="/admin/projects">Projets</a></li>
+    <li class="nav-item"><a class="nav-link" href="/admin/skills">Compétences</a></li>
+    <li class="nav-item"><a class="nav-link" href="/admin/api-keys">Clés d'API</a></li>
+</ul>
+<ul class="navbar-nav ms-auto">
+    <li class="nav-item"><a class="nav-link" href="/admin/logout">Se déconnecter</a></li>
+</ul>
 {% endblock %}
 {% block body %}
     <div class="d-flex justify-content-between align-items-center mb-4">
