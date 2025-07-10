@@ -2,23 +2,18 @@
 // app/Models/ApiKey.php
 namespace App\Models;
 
-use Doctrine\DBAL\Connection; // <-- On importe la bonne classe
+use Doctrine\DBAL\Connection;
 
 class ApiKey
 {
-    // On change le type de $pdo ici aussi, de PDO à Connection
     public static function isValid(string $key, Connection $db): bool
     {
-        // La logique reste la même, mais on utilise les méthodes de DBAL
         $stmt = $db->prepare('SELECT 1 FROM api_keys WHERE api_key = :api_key');
         $stmt->bindValue('api_key', $key);
         $result = $stmt->executeQuery();
-        
         return $result->fetchOne() !== false;
     }
-    /**
-     * Vérifie si une clé est une "master key".
-     */
+
     public static function isMasterKey(string $key, Connection $db): bool
     {
         return $db->createQueryBuilder()
@@ -30,17 +25,12 @@ class ApiKey
             ->setParameter('role', 'master')
             ->fetchOne() !== false;
     }
-    /**
-     * Récupère toutes les clés.
-     */
+
     public static function fetchAll(Connection $db): array
     {
-        return $db->fetchAllAssociative('SELECT id, name, LEFT(api_key, 8) as api_key_preview, role, created_at FROM api_keys');
+        return $db->fetchAllAssociative('SELECT id, name, LEFT(api_key, 8) as api_key_preview, role, created_at FROM api_keys ORDER BY id DESC');
     }
 
-    /**
-     * Crée une nouvelle clé.
-     */
     public static function create(Connection $db, array $data): bool
     {
         return $db->insert('api_keys', [

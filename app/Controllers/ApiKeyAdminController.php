@@ -23,26 +23,23 @@ class ApiKeyAdminController extends AdminController
     public function handleCreateForm(): void
     {
         $this->checkAuth();
-        
-        // Validation des données du formulaire
+
         $validator = new Validator;
         $validation = $validator->validate($_POST, ['name' => 'required', 'master_key' => 'required']);
         if ($validation->fails()) {
-            echo $this->twig->render('admin/api_keys/form.html.twig', ['errors' => $validation->errors()->firstOfAll()]);
+            echo $this->twig->render('admin/api_keys/form.html.twig', ['errors' => $validation->errors()->firstOfAll(), 'old' => $_POST]);
             return;
         }
 
-        // Vérification de la clé originelle
         $masterKey = $_POST['master_key'];
         if (!ApiKey::isMasterKey($masterKey, $this->db)) {
-            echo $this->twig->render('admin/api_keys/form.html.twig', ['error' => 'La clé originelle fournie est invalide.']);
+            echo $this->twig->render('admin/api_keys/form.html.twig', ['error' => 'La clé originelle fournie est invalide.', 'old' => $_POST]);
             return;
         }
 
-        // Si tout est bon, on crée la nouvelle clé
         $newKeyData = [
             'name' => $_POST['name'],
-            'api_key' => bin2hex(random_bytes(16)) // Génère une nouvelle clé aléatoire
+            'api_key' => bin2hex(random_bytes(16))
         ];
         ApiKey::create($this->db, $newKeyData);
 

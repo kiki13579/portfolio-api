@@ -1,15 +1,6 @@
+{# templates/admin/api_keys/list.html.twig #}
 {% extends "base.html.twig" %}
 {% block title %}Gestion des Clés d'API{% endblock %}
-{% block ul %}
-<ul class="navbar-nav me-auto">
-    <li class="nav-item"><a class="nav-link" href="/admin/projects">Projets</a></li>
-    <li class="nav-item"><a class="nav-link" href="/admin/skills">Compétences</a></li>
-    <li class="nav-item"><a class="nav-link" href="/admin/api-keys">Clés d'API</a></li>
-</ul>
-<ul class="navbar-nav ms-auto">
-    <li class="nav-item"><a class="nav-link" href="/admin/logout">Se déconnecter</a></li>
-</ul>
-{% endblock %}
 {% block body %}
     <h1>Gestion des Clés d'API</h1>
     <a href="/admin/api-keys/new" class="btn btn-primary mb-3">Créer une clé d'API</a>
@@ -24,6 +15,8 @@
                     <td><span class="badge bg-secondary">{{ key.role }}</span></td>
                     <td>{{ key.created_at|date('d/m/Y H:i') }}</td>
                 </tr>
+            {% else %}
+                <tr><td colspan="5" class="text-center">Aucune clé d'API trouvée.</td></tr>
             {% endfor %}
         </tbody>
     </table>

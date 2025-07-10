@@ -1,3 +1,4 @@
+{# templates/admin/api_keys/form.html.twig #}
 {% extends "base.html.twig" %}
 {% block title %}Créer une Clé d'API{% endblock %}
 {% block body %}
@@ -6,7 +7,7 @@
     <form method="POST">
         <div class="mb-3">
             <label for="name" class="form-label">Nom de la clé (ex: "Frontend Portfolio")</label>
-            <input type="text" name="name" id="name" class="form-control" required>
+            <input type="text" name="name" id="name" class="form-control" value="{{ old.name ?? '' }}" required>
         </div>
         <div class="mb-3">
             <label for="master_key" class="form-label">Votre Clé Originelle (Master Key)</label>
