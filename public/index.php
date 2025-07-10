@@ -2,13 +2,16 @@
 // public/index.php
 declare(strict_types=1);
 
-// Démarre la session pour les messages flash et l'authentification admin
-session_start(); 
+// Démarre la session pour l'authentification et les messages flash
+session_start();
 
 require __DIR__ . '/../vendor/autoload.php';
 
+// On importe toutes les classes de contrôleurs que l'on va utiliser
 use App\Controllers\AdminController;
+use App\Controllers\ApiKeyAdminController;
 use App\Controllers\HomeController;
+use App\Controllers\ProjectAdminController;
 use App\Controllers\ProjectController;
 use App\Controllers\SkillAdminController;
 use App\Controllers\SkillController;
@@ -22,11 +25,10 @@ $container = require __DIR__ . '/../config/container.php';
 
 set_exception_handler(function (Throwable $e) use ($container) {
     $container->get(Logger::class)->error($e->getMessage(), ['exception' => $e]);
-    JsonView::render(['error' => 'Internal Server Error', 'message' => $e->getMessage()], 500);
+    JsonView::render(['error' => 'Internal Server Error', 'message' => 'Une erreur est survenue.'], 500);
 });
 
 // --- Middleware de Sécurité pour l'API ---
-// On vérifie si la route commence par /api/ pour n'appliquer la sécurité que sur l'API
 if (str_starts_with($_SERVER['REQUEST_URI'], '/api/')) {
     App\Middleware\ApiKeyMiddleware::handle($container->get(Connection::class));
 }
@@ -34,57 +36,60 @@ if (str_starts_with($_SERVER['REQUEST_URI'], '/api/')) {
 // --- Configuration de Twig ---
 /** @var Environment $twig */
 $twig = $container->get(Environment::class);
-// On donne accès à la session à Twig pour les messages flash
 $twig->addGlobal('app', ['session' => $_SESSION]);
 
-// --- Routage ---
+
+// --- Définition des Routes ---
 $dispatcher = FastRoute\simpleDispatcher(function(FastRoute\RouteCollector $r) {
-    // Home Routes
+    // Route Publique
     $r->addRoute('GET', '/', [HomeController::class, 'index']);
 
-    // API Routes
+    // Routes de l'API JSON
     $r->addRoute('GET', '/api/projects', [ProjectController::class, 'list']);
-    $r->addRoute('POST', '/api/projects', [ProjectController::class, 'create']);
     $r->addRoute('GET', '/api/projects/{id:\d+}', [ProjectController::class, 'show']);
 
     $r->addRoute('GET', '/api/skills', [SkillController::class, 'list']);
-    
-    // Admin Routes
+
+    // Routes du Back-Office (Général)
     $r->addRoute('GET', '/admin', [AdminController::class, 'dashboard']);
     $r->addRoute('GET', '/admin/login', [AdminController::class, 'showLogin']);
     $r->addRoute('POST', '/admin/login', [AdminController::class, 'handleLogin']);
     $r->addRoute('GET', '/admin/logout', [AdminController::class, 'logout']);
 
-    $r->addRoute('GET', '/admin/projects/new', [AdminController::class, 'showCreateForm']);
-    $r->addRoute('POST', '/admin/projects/new', [AdminController::class, 'handleCreateForm']);
-    $r->addRoute('GET', '/admin/projects/edit/{id:\d+}', [AdminController::class, 'showEditForm']);
-    $r->addRoute('POST', '/admin/projects/edit/{id:\d+}', [AdminController::class, 'handleEditForm']);
-    $r->addRoute('POST', '/admin/projects/delete/{id:\d+}', [AdminController::class, 'handleDelete']);
+    // Routes du Back-Office (CRUD Projets)
+    $r->addRoute('GET', '/admin/projects', [ProjectAdminController::class, 'list']);
+    $r->addRoute('GET', '/admin/projects/new', [ProjectAdminController::class, 'showForm']);
+    $r->addRoute('POST', '/admin/projects/new', [ProjectAdminController::class, 'saveForm']);
+    $r->addRoute('GET', '/admin/projects/edit/{id:\d+}', [ProjectAdminController::class, 'showForm']);
+    $r->addRoute('POST', '/admin/projects/edit/{id:\d+}', [ProjectAdminController::class, 'saveForm']);
+    $r->addRoute('POST', '/admin/projects/delete/{id:\d+}', [ProjectAdminController::class, 'delete']);
 
+    // Routes du Back-Office (CRUD Compétences)
     $r->addRoute('GET', '/admin/skills', [SkillAdminController::class, 'list']);
     $r->addRoute('GET', '/admin/skills/new', [SkillAdminController::class, 'showCreateForm']);
     $r->addRoute('POST', '/admin/skills/new', [SkillAdminController::class, 'handleCreateForm']);
-    $r->addRoute('GET', '/admin/skills/edit/{id:\d+}', [SkillAdminController::class, 'showEditForm']);
-    $r->addRoute('POST', '/admin/skills/edit/{id:\d+}', [SkillAdminController::class, 'handleEditForm']);
-    $r->addRoute('POST', '/admin/skills/delete/{id:\d+}', [SkillAdminController::class, 'handleDelete']);
+    $r->addRoute('GET', '/admin/skills/edit/{id:\d+}', [SkillAdminController::class, 'showForm']);
+
+    // Routes du Back-Office (API Keys)
+    $r->addRoute('GET', '/admin/api-keys', [ApiKeyAdminController::class, 'list']);
+    $r->addRoute('GET', '/admin/api-keys/new', [ApiKeyAdminController::class, 'showCreateForm']);
+    $r->addRoute('POST', '/admin/api-keys/new', [ApiKeyAdminController::class, 'handleCreateForm']);
 });
     
+// --- Lancement du Routeur ---
 $routeInfo = $dispatcher->dispatch($_SERVER['REQUEST_METHOD'], strtok($_SERVER['REQUEST_URI'], '?'));
     
 switch ($routeInfo[0]) {
     case FastRoute\Dispatcher::FOUND:
-        $handler = $routeInfo[1];
+        [$controllerClass, $method] = $routeInfo[1];
         $vars = $routeInfo[2];
 
-        $controller = $container->get($handler[0]);
-        $controller->{$handler[1]}($vars);
+        $controller = $container->get($controllerClass);
+        $controller->$method($vars);
         break;
     
-    case FastRoute\Dispatcher::NOT_FOUND:
+    // ... gestion des erreurs 404 et 405 ...
+    default:
         JsonView::render(['error' => 'Not Found'], 404);
-        break;
-
-    case FastRoute\Dispatcher::METHOD_NOT_ALLOWED:
-        JsonView::render(['error' => 'Method Not Allowed'], 405);
         break;
 }

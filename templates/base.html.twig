@@ -1,4 +1,3 @@
-{# templates/base.html.twig #}
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -12,16 +11,20 @@
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
         <div class="container">
             <a class="navbar-brand" href="/admin">Portfolio Admin</a>
-            {% block ul %}{% endblock %}
-            
+            <div class="collapse navbar-collapse">
+                {% block ul %}{% endblock %}
+            </div>
         </div>
     </nav>
 
-    <main class="container my-5">
-        {% if app.session.flash('flash_message') %}
+    <main class="container">
+        {# Affichage des messages flash de succès #}
+        {% if app.session.flash_message %}
             <div class="alert alert-success">
-                {{ app.session.flash('flash_message')[0] }}
+                {{ app.session.flash_message[0] }}
             </div>
+            {# On "consomme" le message pour qu'il ne s'affiche qu'une fois #}
+            {% set flash = app.session.flash('flash_message') %}
         {% endif %}
 
         {% block body %}{% endblock %}

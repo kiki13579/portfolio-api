@@ -1,0 +1,18 @@
+{% extends "base.html.twig" %}
+{% block title %}Créer une Clé d'API{% endblock %}
+{% block body %}
+    <h1>Créer une Clé d'API</h1>
+    {% if error %}<div class="alert alert-danger">{{ error }}</div>{% endif %}
+    <form method="POST">
+        <div class="mb-3">
+            <label for="name" class="form-label">Nom de la clé (ex: "Frontend Portfolio")</label>
+            <input type="text" name="name" id="name" class="form-control" required>
+        </div>
+        <div class="mb-3">
+            <label for="master_key" class="form-label">Votre Clé Originelle (Master Key)</label>
+            <input type="text" name="master_key" id="master_key" class="form-control" required>
+            <div class="form-text">Vous devez fournir une clé ayant le rôle "master" pour autoriser cette création.</div>
+        </div>
+        <button type="submit" class="btn btn-primary">Créer la clé</button>
+    </form>
+{% endblock %}
