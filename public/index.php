@@ -10,6 +10,7 @@ require __DIR__ . '/../vendor/autoload.php';
 use App\Controllers\AdminController;
 use App\Controllers\HomeController;
 use App\Controllers\ProjectController;
+use App\Controllers\SkillController;
 use App\Views\JsonView;
 use Doctrine\DBAL\Connection;
 use Monolog\Logger;
@@ -44,6 +45,10 @@ $dispatcher = FastRoute\simpleDispatcher(function(FastRoute\RouteCollector $r) {
     $r->addRoute('GET', '/api/projects', [ProjectController::class, 'list']);
     $r->addRoute('POST', '/api/projects', [ProjectController::class, 'create']);
     $r->addRoute('GET', '/api/projects/{id:\d+}', [ProjectController::class, 'show']);
+
+    $r->addRoute('GET', '/api/skills', [SkillController::class, 'list']);
+    $r->addRoute('GET', '/api/skills', [SkillController::class, 'create']);
+    $r->addRoute('GET', '/api/skills/{id:\d+}', [SkillController::class, 'show']);
     
     // Admin Routes
     $r->addRoute('GET', '/admin', [AdminController::class, 'dashboard']);

@@ -1,15 +1,19 @@
 <?php
+// app/Models/ApiKey.php
 namespace App\Models;
 
-use PDO;
+use Doctrine\DBAL\Connection; // <-- On importe la bonne classe
 
 class ApiKey
 {
-    public static function isValid(string $key, PDO $pdo): bool
+    // On change le type de $pdo ici aussi, de PDO à Connection
+    public static function isValid(string $key, Connection $db): bool
     {
-        $stmt = $pdo->prepare('SELECT 1 FROM api_keys WHERE api_key = :api_key');
-        $stmt->execute(['api_key' => $key]);
+        // La logique reste la même, mais on utilise les méthodes de DBAL
+        $stmt = $db->prepare('SELECT 1 FROM api_keys WHERE api_key = :api_key');
+        $stmt->bindValue('api_key', $key);
+        $result = $stmt->executeQuery();
         
-        return $stmt->fetchColumn() !== false;
+        return $result->fetchOne() !== false;
     }
 }
