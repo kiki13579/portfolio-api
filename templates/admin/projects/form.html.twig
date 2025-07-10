@@ -1,17 +1,38 @@
-{# templates/admin/skills/form.html.twig #}
 {% extends "base.html.twig" %}
+
 {% block title %}{{ form_title }}{% endblock %}
+
 {% block body %}
     <h1>{{ form_title }}</h1>
-    <form method="POST">
+
+    {# Le formulaire poste sur la même URL, ce qui fonctionne pour la création et la modification #}
+    <form method="POST" action="">
         <div class="mb-3">
-            <label for="name" class="form-label">Nom</label>
-            <input type="text" name="name" id="name" class="form-control" value="{{ old.name ?? '' }}">
+            <label for="title" class="form-label">Titre</label>
+            {# On affiche la valeur précédente en cas d'erreur, ou la valeur du projet si on est en édition #}
+            <input type="text" name="title" id="title" class="form-control {{ errors.title ? 'is-invalid' : '' }}" value="{{ old.title ?? project.title ?? '' }}">
+            {% if errors.title %}
+                <div class="invalid-feedback">{{ errors.title }}</div>
+            {% endif %}
         </div>
+
         <div class="mb-3">
-            <label for="category" class="form-label">Catégorie</label>
-            <input type="text" name="category" id="category" class="form-control" value="{{ old.category ?? '' }}">
+            <label for="description" class="form-label">Description</label>
+            <textarea name="description" id="description" class="form-control {{ errors.description ? 'is-invalid' : '' }}" rows="5">{{ old.description ?? project.description ?? '' }}</textarea>
+            {% if errors.description %}
+                <div class="invalid-feedback">{{ errors.description }}</div>
+            {% endif %}
         </div>
+
+        <div class="mb-3">
+            <label for="projectUrl" class="form-label">URL du projet</label>
+            <input type="url" name="projectUrl" id="projectUrl" class="form-control {{ errors.projectUrl ? 'is-invalid' : '' }}" value="{{ old.projectUrl ?? project.projectUrl ?? '' }}">
+             {% if errors.projectUrl %}
+                <div class="invalid-feedback">{{ errors.projectUrl }}</div>
+            {% endif %}
+        </div>
+
         <button type="submit" class="btn btn-primary">Enregistrer</button>
+        <a href="/admin/projects" class="btn btn-secondary">Annuler</a>
     </form>
 {% endblock %}
