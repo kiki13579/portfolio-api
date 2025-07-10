@@ -8,7 +8,7 @@ use Twig\Environment;
 
 class AdminController
 {
-    public function __construct(private Environment $twig, private Connection $db)
+    public function __construct(protected Environment $twig, protected Connection $db)
     {
         if (empty($_ENV['ADMIN_PASSWORD'])) {
             $dotenv = \Dotenv\Dotenv::createImmutable(__DIR__ . '/../../');
@@ -51,7 +51,7 @@ class AdminController
         ]);
     }
 
-    private function checkAuth(): void
+    protected function checkAuth(): void
     {
         if (!isset($_SESSION['is_admin']) || !$_SESSION['is_admin']) {
             header('Location: /admin/login');

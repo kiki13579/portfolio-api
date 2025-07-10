@@ -10,6 +10,7 @@ require __DIR__ . '/../vendor/autoload.php';
 use App\Controllers\AdminController;
 use App\Controllers\HomeController;
 use App\Controllers\ProjectController;
+use App\Controllers\SkillAdminController;
 use App\Controllers\SkillController;
 use App\Views\JsonView;
 use Doctrine\DBAL\Connection;
@@ -47,19 +48,25 @@ $dispatcher = FastRoute\simpleDispatcher(function(FastRoute\RouteCollector $r) {
     $r->addRoute('GET', '/api/projects/{id:\d+}', [ProjectController::class, 'show']);
 
     $r->addRoute('GET', '/api/skills', [SkillController::class, 'list']);
-    $r->addRoute('GET', '/api/skills', [SkillController::class, 'create']);
-    $r->addRoute('GET', '/api/skills/{id:\d+}', [SkillController::class, 'show']);
     
     // Admin Routes
     $r->addRoute('GET', '/admin', [AdminController::class, 'dashboard']);
     $r->addRoute('GET', '/admin/login', [AdminController::class, 'showLogin']);
     $r->addRoute('POST', '/admin/login', [AdminController::class, 'handleLogin']);
     $r->addRoute('GET', '/admin/logout', [AdminController::class, 'logout']);
+
     $r->addRoute('GET', '/admin/projects/new', [AdminController::class, 'showCreateForm']);
     $r->addRoute('POST', '/admin/projects/new', [AdminController::class, 'handleCreateForm']);
     $r->addRoute('GET', '/admin/projects/edit/{id:\d+}', [AdminController::class, 'showEditForm']);
     $r->addRoute('POST', '/admin/projects/edit/{id:\d+}', [AdminController::class, 'handleEditForm']);
     $r->addRoute('POST', '/admin/projects/delete/{id:\d+}', [AdminController::class, 'handleDelete']);
+
+    $r->addRoute('GET', '/admin/skills', [SkillAdminController::class, 'list']);
+    $r->addRoute('GET', '/admin/skills/new', [SkillAdminController::class, 'showCreateForm']);
+    $r->addRoute('POST', '/admin/skills/new', [SkillAdminController::class, 'handleCreateForm']);
+    $r->addRoute('GET', '/admin/skills/edit/{id:\d+}', [SkillAdminController::class, 'showEditForm']);
+    $r->addRoute('POST', '/admin/skills/edit/{id:\d+}', [SkillAdminController::class, 'handleEditForm']);
+    $r->addRoute('POST', '/admin/skills/delete/{id:\d+}', [SkillAdminController::class, 'handleDelete']);
 });
     
 $routeInfo = $dispatcher->dispatch($_SERVER['REQUEST_METHOD'], strtok($_SERVER['REQUEST_URI'], '?'));
