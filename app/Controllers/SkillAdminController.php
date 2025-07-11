@@ -1,8 +1,9 @@
 <?php
-// app/Controllers/SkillAdminController.php
+
 namespace App\Controllers;
 
 use App\Models\Skill;
+use App\Models\SkillCategory;
 use Doctrine\DBAL\Connection;
 use Rakit\Validation\Validator;
 use Twig\Environment;
@@ -16,13 +17,17 @@ class SkillAdminController extends AdminController
         $skills = Skill::fetchAll($this->db);
         echo $this->twig->render('admin/skills/list.html.twig', ['skills' => $skills]);
     }
-
-    // Affiche le formulaire de création
+    
     public function showCreateForm(): void
     {
         $this->checkAuth();
+        
+        // On récupère toutes les catégories disponibles
+        $categories = SkillCategory::fetchAll($this->db);
+        
         echo $this->twig->render('admin/skills/form.html.twig', [
-            'form_title' => 'Ajouter une compétence'
+            'form_title' => 'Ajouter une compétence',
+            'categories' => $categories // <-- On les passe au template
         ]);
     }
 
@@ -50,6 +55,4 @@ class SkillAdminController extends AdminController
         header('Location: /admin/skills');
         exit();
     }
-    
-    // Les méthodes pour modifier et supprimer seront ajoutées ici...
 }
